@@ -1,6 +1,10 @@
 package com.example.user.myapplication
 
 import android.app.Activity
+import android.Manifest
+import android.content.pm.PackageManager
+import android.provider.MediaStore
+import android.support.v4.app.ActivityCompat
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -47,6 +51,12 @@ class MainActivity : AppCompatActivity() {
             intent.addCategory(Intent.CATEGORY_OPENABLE)
             intent.setType("*/*")
             startActivityForResult(intent, RESULT_PICK_IMAGEFILE2)
+        }
+
+        load_cameraImage.setOnClickListener {
+            checkPermission()
+            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            startActivityForResult(intent, RESULT_CAMERA)
         }
 
         // 決定ボタンのリスナー
@@ -121,7 +131,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    // 画像を選択したときの動き
+    // startActivityForResultで呼ばれる
     override fun onActivityResult(requestCode: Int, resultCode: Int, resultdata: Intent?) {
         if((requestCode == RESULT_PICK_IMAGEFILE1 || requestCode == RESULT_PICK_IMAGEFILE2)
                 && resultCode == Activity.RESULT_OK) {
@@ -137,6 +147,23 @@ class MainActivity : AppCompatActivity() {
                     e.printStackTrace()
                 }
             }
+        }
+        if (requestCode == RESULT_CAMERA) {
+            var image_view: ImageView = src_img1
+            var captureImage = resultdata?.extras
+            if(captureImage != null){
+                val bitmap = captureImage.get("data") as Bitmap
+                image_view.setImageBitmap(bitmap) // ImageView に画像をセット
+            } else{
+                throw error("resultdata is not exist")
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int,permissions: Array<out String>, grantResults: IntArray){
+        if(requestCode == 1004){
+            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            startActivityForResult(intent, RESULT_CAMERA)
         }
     }
 
@@ -158,8 +185,20 @@ class MainActivity : AppCompatActivity() {
         return (view.drawable as BitmapDrawable)?.let { it.bitmap }
     }
 
+    private fun checkPermission(){
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED){
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.CAMERA)) {
+            } else {
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), REQUEST_PERMISSION);
+            }
+        }
+    }
+
     companion object {
         private val RESULT_PICK_IMAGEFILE1: Int = 1001
         private val RESULT_PICK_IMAGEFILE2: Int = 1002
+        private val RESULT_CAMERA: Int = 1003
+        private val REQUEST_PERMISSION: Int = 1004
     }
 }
