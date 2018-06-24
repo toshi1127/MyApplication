@@ -72,7 +72,7 @@ class MainActivity : AppCompatActivity() {
                 val descriptor2 = Mat().apply { algorithm.compute(scene2, keypoint2, this) }
 
                 // マッチング (アルゴリズムにはBruteForceを使用)
-                val matcher = DescriptorMatcher.create("BruteForce")
+                val matcher = DescriptorMatcher.create("BruteForce-Hamming")
 
                 var matches_list: MutableList<DMatch> = mutableListOf()
                 val match12 = MatOfDMatch().apply { matcher.match(descriptor1, descriptor2, this) }
@@ -87,8 +87,10 @@ class MainActivity : AppCompatActivity() {
                     val forward: DMatch =match12_array[i]
                     val backward: DMatch = match21_array[forward.trainIdx]
                     if(backward.trainIdx == forward.queryIdx) {
-                        matches_list.add(forward)
-                        count++
+                        if(backward.distance <= 70){
+                            matches_list.add(forward)
+                            count++
+                        }
                     }
                 }
 
@@ -130,17 +132,23 @@ class MainActivity : AppCompatActivity() {
             if(resultdata?.data != null) {
                 try {
                     val uri: Uri = resultdata.data
-                    val parcelFileDesc: ParcelFileDescriptor = getContentResolver().openFileDescriptor(uri, "r")
-                    if(parcelFileDesc != null) {
-                        val fDesc: FileDescriptor = parcelFileDesc.fileDescriptor
-                        val bmp: Bitmap = BitmapFactory.decodeFileDescriptor(fDesc)
-                        parcelFileDesc.close()
-                        image_view.setImageBitmap(bmp)
-                    }
+                    image_view.setImageBitmap(getImages(uri))
                 } catch(e: IOException) {
                     e.printStackTrace()
                 }
             }
+        }
+    }
+
+    private fun getImages(uri: Uri): Bitmap{
+        val parcelFileDesc: ParcelFileDescriptor = getContentResolver().openFileDescriptor(uri, "r")
+        if(parcelFileDesc != null) {
+            val fDesc: FileDescriptor = parcelFileDesc.fileDescriptor
+            val bmp: Bitmap = BitmapFactory.decodeFileDescriptor(fDesc)
+            parcelFileDesc.close()
+            return bmp
+        } else{
+            throw error("parcelFileDesc is not exist")
         }
     }
 
