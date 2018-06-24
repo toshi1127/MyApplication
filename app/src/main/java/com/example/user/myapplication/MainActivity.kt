@@ -1,6 +1,7 @@
 package com.example.user.myapplication
 
 import android.app.Activity
+import android.view.View
 import android.Manifest
 import android.content.pm.PackageManager
 import android.provider.MediaStore
@@ -14,24 +15,32 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.util.Log
-import android.widget.ImageView
+import android.widget.*
 import kotlinx.android.synthetic.main.activity_main.*
 import org.opencv.android.OpenCVLoader
 import org.opencv.android.Utils
 import org.opencv.core.*
 import org.opencv.features2d.AKAZE
+import org.opencv.features2d.ORB
 import org.opencv.features2d.DescriptorMatcher
 import org.opencv.features2d.Features2d
 import org.opencv.imgproc.Imgproc
 import java.io.FileDescriptor
 import java.io.IOException
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
+
+    var selectItem: String = "ORB";
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        var spinner:Spinner = extractionAlgorithms
+        var adapter = ArrayAdapter.createFromResource(this, R.array.extractionAlgorithmList, android.R.layout.simple_spinner_item)
 
+        spinner!!.setOnItemSelectedListener(this)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinner!!.setAdapter(adapter)
 
         if(!OpenCVLoader.initDebug()) {
             Log.d("OpenCV", "error_openCV")
@@ -70,8 +79,8 @@ class MainActivity : AppCompatActivity() {
                 bitmap = Bitmap.createScaledBitmap(getBitmapFromImageView(src_img2), 640, 480, false)
                 val scene2 = Mat(bitmap!!.height, bitmap!!.width, CvType.CV_8UC1).apply { Utils.bitmapToMat(bitmap, this) }
 
-                // アルゴリズムはAKZEで
-                val algorithm: AKAZE = AKAZE.create()
+                // アルゴリズムはORB or AKAZEで
+                val algorithm = if (selectItem == "ORB") ORB.create() else AKAZE.create()
 
                 // 特徴点抽出
                 val keypoint1 = MatOfKeyPoint().apply { algorithm.detect(scene1, this) }
@@ -129,6 +138,23 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+    }
+
+    override fun onItemSelected(arg0: AdapterView<*>, arg1: View, position: Int, id: Long) {
+        when (position) {
+            0 -> {
+                selectItem = "ORB"
+                Log.d("selectItem", "ORB")
+            }
+            1 -> {
+                selectItem = "AKAZE"
+                Log.d("selectItem", "AKAZE")
+            }
+        }
+    }
+
+    override fun onNothingSelected(arg0: AdapterView<*>) {
+        selectItem = "ORB"
     }
 
     // startActivityForResultで呼ばれる
