@@ -20,6 +20,8 @@ import kotlinx.android.synthetic.main.activity_main.*
 import org.opencv.android.OpenCVLoader
 import org.opencv.android.Utils
 import org.opencv.core.*
+import org.opencv.calib3d.Calib3d.findHomography
+import org.opencv.calib3d.Calib3d.RANSAC
 import org.opencv.features2d.AKAZE
 import org.opencv.features2d.ORB
 import org.opencv.features2d.DescriptorMatcher
@@ -122,6 +124,29 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
                 }
 
                 val matches = MatOfDMatch().apply { this.fromList(matches_list) }
+
+                //RANSACによるモデルの推定
+                var pts1: MutableList<Point> = mutableListOf()
+                var pts2: MutableList<Point> = mutableListOf()
+                for(mat in matches_list) {
+                    pts1.add(keypoint1.toList().get(mat.queryIdx).pt)
+                    pts2.add(keypoint2.toList().get(mat.trainIdx).pt)
+                }
+
+                var pts1After = MatOfPoint2f()
+                pts1After.fromList(pts1)
+                var pts2After = MatOfPoint2f()
+                pts2After.fromList(pts2)
+
+                var inliers = Mat()
+
+                var RansacMatch = findHomography(pts2After, pts1After, RANSAC, 1.0, inliers, 2000, 0.995)
+                for (i in 1..RansacMatch.cols()) {
+                    for (j in 1..RansacMatch.rows()) {
+                        println("Row, column " + i + "," + j + " = " + RansacMatch.get(j, i))
+                    }
+                    println()
+                }
 
                 // 結果画像の背景真っ黒になるのを防ぐ
                 val scene1rgb = Mat().apply { Imgproc.cvtColor(scene1, this, Imgproc.COLOR_RGBA2RGB, 1) }
