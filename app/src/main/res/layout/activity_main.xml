@@ -64,6 +64,10 @@
             android:id="@+id/extractionAlgorithms"
             android:layout_width="wrap_content"
             android:layout_height="match_parent" />
+        <Spinner
+            android:id="@+id/distanceValues"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
     </LinearLayout>
 
     <ImageView
