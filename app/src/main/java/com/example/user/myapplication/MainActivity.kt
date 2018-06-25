@@ -30,17 +30,25 @@ import java.io.IOException
 
 class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
 
-    var selectItem: String = "ORB";
+    var selectItem: String = "ORB"
+    var distance: Int = 10
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        var spinner:Spinner = extractionAlgorithms
-        var adapter = ArrayAdapter.createFromResource(this, R.array.extractionAlgorithmList, android.R.layout.simple_spinner_item)
+        var algorithmsSpinner:Spinner = extractionAlgorithms
+        var distanceSpinner:Spinner = distanceValues
 
-        spinner!!.setOnItemSelectedListener(this)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinner!!.setAdapter(adapter)
+        var algorithmList = ArrayAdapter.createFromResource(this, R.array.extractionAlgorithmList, android.R.layout.simple_spinner_item)
+        var distanceValueList = ArrayAdapter.createFromResource(this, R.array.distanceValues, android.R.layout.simple_spinner_item)
+
+        algorithmsSpinner!!.setOnItemSelectedListener(this)
+        algorithmList.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        algorithmsSpinner!!.setAdapter(algorithmList)
+
+        distanceSpinner!!.setOnItemSelectedListener(this)
+        distanceValueList.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        distanceSpinner!!.setAdapter(distanceValueList)
 
         if(!OpenCVLoader.initDebug()) {
             Log.d("OpenCV", "error_openCV")
@@ -106,7 +114,7 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
                     val forward: DMatch =match12_array[i]
                     val backward: DMatch = match21_array[forward.trainIdx]
                     if(backward.trainIdx == forward.queryIdx) {
-                        if(backward.distance <= 70){
+                        if(backward.distance <= distance){
                             matches_list.add(forward)
                             count++
                         }
@@ -143,18 +151,30 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
     override fun onItemSelected(arg0: AdapterView<*>, arg1: View, position: Int, id: Long) {
         when (position) {
             0 -> {
-                selectItem = "ORB"
-                Log.d("selectItem", "ORB")
+                if(arg0.getItemAtPosition(position) == "ORB"){
+                    selectItem = "ORB"
+                    Log.d("selectItem", "ORB")
+                } else {
+                    distance = Integer.parseInt(arg0.getItemAtPosition(position) as String)
+                }
             }
             1 -> {
-                selectItem = "AKAZE"
-                Log.d("selectItem", "AKAZE")
+                if(arg0.getItemAtPosition(position) == "AKAZE"){
+                    selectItem = "AKAZE"
+                    Log.d("selectItem", "AKAZE")
+                } else {
+                    distance = Integer.parseInt(arg0.getItemAtPosition(position) as String)
+                }
+            }
+            else -> {
+                distance = Integer.parseInt(arg0.getItemAtPosition(position) as String)
             }
         }
     }
 
     override fun onNothingSelected(arg0: AdapterView<*>) {
         selectItem = "ORB"
+        distance = 10
     }
 
     // startActivityForResultで呼ばれる
