@@ -221,6 +221,9 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
                 // マッチング数を出力
                 count_txt.text = "マッチング数: ${count}"
 
+                // Scoreを出力
+                score.text = "Score: ${Score}"
+
             } catch(e: NullPointerException) {
                 e.printStackTrace()
             }
