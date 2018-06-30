@@ -4,7 +4,6 @@ import android.app.Activity
 import android.view.View
 import android.Manifest
 import android.os.Environment
-import android.content.ContentValues;
 import android.content.pm.PackageManager
 import android.provider.MediaStore
 import android.support.v4.app.ActivityCompat
@@ -18,6 +17,7 @@ import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import android.widget.*
+import android.support.v4.content.FileProvider
 import kotlinx.android.synthetic.main.activity_main.*
 import org.opencv.android.OpenCVLoader
 import org.opencv.android.Utils
@@ -44,6 +44,8 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
             Manifest.permission.CAMERA,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE )
+    var ImgUri: Uri? = null
+    var filePath: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,25 +89,37 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         }
 
         load_cameraImage.setOnClickListener {
-            /*
-            var date = Date()
-            var df = SimpleDateFormat("yyyy_MM_dd_HHmmssSSS");
-            var imageName = df.format(date).toString() + "_pinregist.jpg"
-            var photoPath = Environment.getExternalStorageDirectory().toString() + imageName
+            // 保存先のフォルダーを作成
+            val cameraFolder = File(
+                    Environment.getExternalStoragePublicDirectory(
+                            Environment.DIRECTORY_PICTURES), "IMG")
+            cameraFolder.mkdirs()
 
-            var contentValues = ContentValues()
-            contentValues.put(MediaStore.Images.Media.TITLE,photoPath)
-            contentValues.put(MediaStore.Images.Media.MIME_TYPE,"image/jpeg")
+            // 保存ファイル名
+            val fileName = SimpleDateFormat(
+                    "ddHHmmss", Locale.US).format(Date())
+            filePath = String.format("%s/%s.jpg", cameraFolder.path, fileName)
 
-            var ImgUri = Uri.fromFile(File(Environment.getExternalStorageDirectory().toString() + "/DCIM/Camera", photoPath));
+            // capture画像のファイルパス
+            var cameraFile = File(filePath)
+            ImgUri = FileProvider.getUriForFile(
+                    this,
+                    getApplicationContext().getPackageName() + ".fileprovider",
+                    cameraFile)
 
             val intent = Intent()
             intent.setAction(MediaStore.ACTION_IMAGE_CAPTURE)
             intent.putExtra(MediaStore.EXTRA_OUTPUT,ImgUri)
-            startActivityForResult(intent, RESULT_CAMERA)*/
+            startActivityForResult(intent, RESULT_CAMERA)
+
+            //バージョンの変化により無効
+            //var ImgUri = Uri.fromFile()
+
+            //そのまま取り込む方法（画像の解像度が下がる）
+            /*
             val intent = Intent()
             intent.action = MediaStore.ACTION_IMAGE_CAPTURE
-            startActivityForResult(intent, RESULT_CAMERA)
+            startActivityForResult(intent, RESULT_CAMERA)*/
         }
 
         // 決定ボタンのリスナー
@@ -251,13 +265,15 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         }
         if (requestCode == RESULT_CAMERA) {
             var image_view: ImageView = src_img1
+            image_view.setImageURI(ImgUri)
+            /*
             var captureImage = resultdata?.extras
             if(captureImage != null){
                 val bitmap = captureImage.get("data") as Bitmap
                 image_view.setImageBitmap(bitmap) // ImageView に画像をセット
             } else{
                 throw error("resultdata is not exist")
-            }
+            }*/
         }
     }
 
@@ -318,7 +334,7 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         } else {
             Log.d("permission", "requestPermission")
             requestPermission()
-            //ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST_PERMISSION);
+            //ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST_PERMISSION)
         }
     }
 
