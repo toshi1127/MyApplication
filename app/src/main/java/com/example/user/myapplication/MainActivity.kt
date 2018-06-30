@@ -39,13 +39,16 @@ import java.util.*
 class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
 
     var selectItem: String = "ORB"
+    var Score: Double? = null
     var distance: Int = 10
+    var inliersCounter: Int = 0
     var PERMISSIONS = arrayOf(
             Manifest.permission.CAMERA,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE )
     var ImgUri: Uri? = null
     var filePath: String? = null
+    var RANSACMatched: MutableList<DMatch> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -111,9 +114,6 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
             intent.setAction(MediaStore.ACTION_IMAGE_CAPTURE)
             intent.putExtra(MediaStore.EXTRA_OUTPUT,ImgUri)
             startActivityForResult(intent, RESULT_CAMERA)
-
-            //バージョンの変化により無効
-            //var ImgUri = Uri.fromFile()
 
             //そのまま取り込む方法（画像の解像度が下がる）
             /*
@@ -185,12 +185,23 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
                 var inliers = Mat()
 
                 var RansacMatch = findHomography(pts2After, pts1After, RANSAC, 1.0, inliers, 2000, 0.995)
-                for (i in 1..RansacMatch.cols()) {
-                    for (j in 1..RansacMatch.rows()) {
-                        println("Row, column " + i + "," + j + " = " + RansacMatch.get(j, i))
-                    }
-                    println()
+
+                if (RansacMatch.empty()){
+                    return@setOnClickListener
                 }
+
+                for (i in 0 until matches_list.size) {
+                    val values = inliers.get(i, 0)
+                    if (values[0] == 1.0) {
+                        inliersCounter++
+                        RANSACMatched.add(matches_list.get(i))
+                    }
+                }
+
+                Score = inliersCounter.toDouble()/matches_list.size.toDouble()
+
+                println("Score" + Score)
+                val RANSACMatches = MatOfDMatch().apply { this.fromList(RANSACMatched) }
 
                 // 結果画像の背景真っ黒になるのを防ぐ
                 val scene1rgb = Mat().apply { Imgproc.cvtColor(scene1, this, Imgproc.COLOR_RGBA2RGB, 1) }
@@ -198,7 +209,7 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
 
                 // マッチ結果を出力
                 val dest = scene1.clone().apply {
-                    Features2d.drawMatches(scene1rgb, keypoint1, scene2rgb, keypoint2, matches, this)
+                    Features2d.drawMatches(scene1rgb, keypoint1, scene2rgb, keypoint2, RANSACMatches, this)
                 }
 
                 val result_btm: Bitmap = Bitmap.createBitmap(dest.cols(), dest.rows(), Bitmap.Config.ARGB_8888)
@@ -266,14 +277,6 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         if (requestCode == RESULT_CAMERA) {
             var image_view: ImageView = src_img1
             image_view.setImageURI(ImgUri)
-            /*
-            var captureImage = resultdata?.extras
-            if(captureImage != null){
-                val bitmap = captureImage.get("data") as Bitmap
-                image_view.setImageBitmap(bitmap) // ImageView に画像をセット
-            } else{
-                throw error("resultdata is not exist")
-            }*/
         }
     }
 
@@ -334,7 +337,6 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         } else {
             Log.d("permission", "requestPermission")
             requestPermission()
-            //ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST_PERMISSION)
         }
     }
 
