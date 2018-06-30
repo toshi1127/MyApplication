@@ -3,6 +3,8 @@ package com.example.user.myapplication
 import android.app.Activity
 import android.view.View
 import android.Manifest
+import android.os.Environment
+import android.content.ContentValues;
 import android.content.pm.PackageManager
 import android.provider.MediaStore
 import android.support.v4.app.ActivityCompat
@@ -27,17 +29,29 @@ import org.opencv.features2d.ORB
 import org.opencv.features2d.DescriptorMatcher
 import org.opencv.features2d.Features2d
 import org.opencv.imgproc.Imgproc
+
+import java.text.SimpleDateFormat
 import java.io.FileDescriptor
+import java.io.File
 import java.io.IOException
+import java.util.*
 
 class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
 
     var selectItem: String = "ORB"
     var distance: Int = 10
+    var PERMISSIONS = arrayOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_main)
+
+        checkPermission()
+
         var algorithmsSpinner:Spinner = extractionAlgorithms
         var distanceSpinner:Spinner = distanceValues
 
@@ -73,8 +87,24 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         }
 
         load_cameraImage.setOnClickListener {
-            checkPermission()
-            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            /*
+            var date = Date()
+            var df = SimpleDateFormat("yyyy_MM_dd_HHmmssSSS");
+            var imageName = df.format(date).toString() + "_pinregist.jpg"
+            var photoPath = Environment.getExternalStorageDirectory().toString() + imageName
+
+            var contentValues = ContentValues()
+            contentValues.put(MediaStore.Images.Media.TITLE,photoPath)
+            contentValues.put(MediaStore.Images.Media.MIME_TYPE,"image/jpeg")
+
+            var ImgUri = Uri.fromFile(File(Environment.getExternalStorageDirectory().toString() + "/DCIM/Camera", photoPath));
+
+            val intent = Intent()
+            intent.setAction(MediaStore.ACTION_IMAGE_CAPTURE)
+            intent.putExtra(MediaStore.EXTRA_OUTPUT,ImgUri)
+            startActivityForResult(intent, RESULT_CAMERA)*/
+            val intent = Intent()
+            intent.action = MediaStore.ACTION_IMAGE_CAPTURE
             startActivityForResult(intent, RESULT_CAMERA)
         }
 
@@ -232,9 +262,33 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
     }
 
     override fun onRequestPermissionsResult(requestCode: Int,permissions: Array<out String>, grantResults: IntArray){
-        if(requestCode == 1004){
-            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            startActivityForResult(intent, RESULT_CAMERA)
+        if(requestCode == REQUEST_PERMISSION){
+            if (grantResults.size> 0) {
+                for (i in 0 until permissions.size-1) {
+                    if (permissions[i].equals(Manifest.permission.CAMERA)) {
+                        if (grantResults[i] === PackageManager.PERMISSION_GRANTED) {
+                            // 許可された
+                            Log.d("permission", "CAMERA")
+                        } else {
+                            // それでも拒否された時の対応
+                        }
+                    } else if (permissions[i].equals(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                        if (grantResults[i] === PackageManager.PERMISSION_GRANTED) {
+                            // 許可された
+                            Log.d("permission", "WRITE_EXTERNAL_STORAGE")
+                        } else {
+                            // それでも拒否された時の対応
+                        }
+                    } else if (permissions[i].equals(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                        if (grantResults[i] === PackageManager.PERMISSION_GRANTED) {
+                            // 許可された
+                            Log.d("permission", "READ_EXTERNAL_STORAGE")
+                        } else {
+                            // それでも拒否された時の対応
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -257,13 +311,34 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
     }
 
     private fun checkPermission(){
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED){
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.CAMERA)) {
-            } else {
-                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), REQUEST_PERMISSION);
-            }
+        Log.d("permission", "checkPermissionsArray")
+        if (checkPermissionsArray(PERMISSIONS)){
+            Log.d("permission", "finish_checkPermissionsArray")
+            return
+        } else {
+            Log.d("permission", "requestPermission")
+            requestPermission()
+            //ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST_PERMISSION);
         }
+    }
+
+    private fun requestPermission() {
+        Log.d("permission", "shouldShowRequestPermissionRationale")
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            Log.d("permission", "requestPermissions")
+            ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST_PERMISSION)
+        }
+        ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST_PERMISSION)
+    }
+
+    private fun checkPermissionsArray(permissions: Array<String>): Boolean {
+        Log.d("permission", "checkSelfPermission")
+        for (permission in permissions) {
+            val permissionRequest = ActivityCompat.checkSelfPermission(this, permission)
+            if (permissionRequest != PackageManager.PERMISSION_GRANTED)
+                return false
+        }
+        return true
     }
 
     companion object {
