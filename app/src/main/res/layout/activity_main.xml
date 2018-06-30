@@ -10,7 +10,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="8dp"
+        android:layout_margin="5dp"
         android:orientation="horizontal">
         <Button
             android:id="@+id/select_img1_btn"
@@ -35,23 +35,23 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="3dp">
+        android:layout_margin="2dp">
         <ImageView
             android:id="@+id/src_img1"
             android:layout_width="0dp"
-            android:layout_height="200dp"
+            android:layout_height="180dp"
             android:layout_weight="1"/>
         <ImageView
             android:id="@+id/src_img2"
             android:layout_width="0dp"
-            android:layout_height="200dp"
+            android:layout_height="180dp"
             android:layout_weight="1"/>
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content" android:gravity="center_horizontal"
-        android:layout_margin="3dp">
+        android:layout_margin="2dp">
 
         <Button
             android:id="@+id/decition_btn"
@@ -77,6 +77,11 @@
         android:layout_gravity="center_horizontal"/>
     <TextView
         android:id="@+id/count_txt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal" />
+    <TextView
+        android:id="@+id/score"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal" />
