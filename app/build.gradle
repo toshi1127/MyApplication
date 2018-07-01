@@ -28,6 +28,7 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:28.+'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    compile 'com.android.support:exifinterface:28.0.0-alpha3'
     testCompile 'junit:junit:4.12'
     compile project(':openCVLibrary341')
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
