@@ -2,20 +2,30 @@ package com.example.user.myapplication
 
 import android.app.Activity
 import android.view.View
-import android.Manifest
+import android.content.ContentUris
+import android.content.ContentValues
+import android.content.Context
+import android.database.Cursor
+import android.net.Uri
+import android.os.Build
 import android.os.Environment
-import android.content.pm.PackageManager
+import android.provider.DocumentsContract
 import android.provider.MediaStore
+import android.util.Log
+import android.Manifest
+import android.content.pm.PackageManager
 import android.support.v4.app.ActivityCompat
 import android.content.Intent
+import android.graphics.Matrix
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
-import android.net.Uri
+import android.media.ExifInterface
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
-import android.util.Log
+import android.widget.ImageView.ScaleType
+import android.widget.RelativeLayout.LayoutParams
 import android.widget.*
 import android.support.v4.content.FileProvider
 import kotlinx.android.synthetic.main.activity_main.*
@@ -48,6 +58,7 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
             Manifest.permission.READ_EXTERNAL_STORAGE )
     var ImgUri: Uri? = null
     var filePath: String? = null
+    var cameraFilePath: String? = null
     var RANSACMatched: MutableList<DMatch> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -105,6 +116,7 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
 
             // capture画像のファイルパス
             var cameraFile = File(filePath)
+            cameraFilePath = cameraFile.path
             ImgUri = FileProvider.getUriForFile(
                     this,
                     getApplicationContext().getPackageName() + ".fileprovider",
@@ -272,6 +284,16 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
                 try {
                     val uri: Uri = resultdata.data
                     image_view.setImageBitmap(getImages(uri))
+                    println(getPathFromUri(uri))
+                    val exifInterface = ExifInterface(getPathFromUri(uri))//ここで落ちている
+                    var orientation: Int = (exifInterface.getAttribute(ExifInterface.TAG_ORIENTATION)).toInt()
+                    println(orientation)
+
+                    //var wm: WindowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+                    //val disp = wm.defaultDisplay
+                    //var viewWidth = disp.getWidth()
+                    //setMatrix(image_view, getImages(uri), orientation, viewWidth)
+
                 } catch(e: IOException) {
                     e.printStackTrace()
                 }
@@ -279,8 +301,61 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         }
         if (requestCode == RESULT_CAMERA) {
             var image_view: ImageView = src_img1
+            println(cameraFilePath)// storage/emulated/0/Pictures/IMG/01202754.jpg
+            val exifInterface = ExifInterface(cameraFilePath)// FilePathで正常に動作する。
+            var orientation: Int = (exifInterface.getAttribute(ExifInterface.TAG_ORIENTATION)).toInt()
+            println(orientation)
             image_view.setImageURI(ImgUri)
         }
+    }
+
+    fun getPathFromUri(uri : Uri) : String? {
+        val isAfterKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
+        // DocumentProvider
+        Log.d("URI","uri:${uri.authority}")
+        if (isAfterKitKat && DocumentsContract.isDocumentUri(this, uri)) {
+            if ("com.android.externalstorage.documents" == uri.authority) {
+                // ExternalStorageProvider
+                val split = DocumentsContract.getDocumentId(uri).split(":")
+                val type = split[0]
+                if ("primary".equals(type, true)) {
+                    return "${Environment.getExternalStorageDirectory()}/${split[1]}"
+                }else {
+                    return "/stroage/$type/${split[1]}"
+                }
+            }else if ("com.android.providers.downloads.documents" == uri.authority) {
+                // DownloadsProvider
+                val id = DocumentsContract.getDocumentId(uri)
+                val contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), id.toLong())
+                return getDataColumn(contentUri, null, null)
+            }else if ("com.android.providers.media.documents" == uri.authority) {
+                // MediaProvider
+                val split = DocumentsContract.getDocumentId(uri).split(":")
+                return getDataColumn(MediaStore.Files.getContentUri("external"), "_id=?", Array(1, {split[1]}))
+            }
+        }else if ("content".equals(uri.scheme, true)) {
+            //MediaStore
+            return getDataColumn(uri, null, null)
+        }else if ("file".equals(uri.scheme, true)) {
+            // File
+            return uri.path
+        }
+        return null
+    }
+
+    fun getDataColumn(uri : Uri, selection : String?, selectionArgs : Array<String>?) : String? {
+        var cursor : Cursor? = null
+        val projection = Array(1, {MediaStore.Files.FileColumns.DATA})
+        try {
+            cursor = contentResolver.query(uri, projection, selection, selectionArgs, null)
+            if (cursor != null && cursor.moveToFirst()) {
+                return cursor.getString(cursor.getColumnIndexOrThrow(projection[0]))
+            }
+        } finally {
+            if (cursor != null)
+                cursor.close()
+        }
+        return null
     }
 
     override fun onRequestPermissionsResult(requestCode: Int,permissions: Array<out String>, grantResults: IntArray){
@@ -326,6 +401,16 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         }
     }
 
+    private fun getImageFileDescriptor(uri: Uri): FileDescriptor{
+        val parcelFileDesc: ParcelFileDescriptor = this.getContentResolver().openFileDescriptor(uri, "r")
+        if(parcelFileDesc != null) {
+            val fDesc: FileDescriptor = parcelFileDesc.fileDescriptor
+            return fDesc
+        } else{
+            throw error("parcelFileDesc is not exist")
+        }
+    }
+
     // BitmapをImageViewから取得する
     private fun getBitmapFromImageView(view: ImageView): Bitmap {
         view.getDrawingCache(true)
@@ -361,6 +446,81 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         }
         return true
     }
+
+     private fun setMatrix(view: ImageView, bitmap: Bitmap, orientation: Int, width: Int){
+		view.setScaleType(ScaleType.MATRIX)
+		view.setImageBitmap(bitmap)
+		var wOrg = bitmap.getWidth()
+		var hOrg = bitmap.getHeight()
+		var lp :LayoutParams = view.getLayoutParams() as LayoutParams
+		var factor: Float? = null
+		var mat = Matrix()
+		mat.reset()
+		when(orientation)
+		{
+			1 -> {
+                factor = width/wOrg.toFloat()
+                mat.preScale(factor, factor)
+                lp.width = wOrg*factor.toInt()
+                lp.height = hOrg*factor.toInt()
+            }
+			2 -> {
+                factor = width/wOrg.toFloat()
+                mat.postScale(factor, -factor)
+                mat.postTranslate(0f, hOrg*factor)
+                lp.width = wOrg*factor.toInt()
+                lp.height = hOrg*factor.toInt()
+            }
+			3 -> {
+                mat.postRotate(180f, wOrg/2f, hOrg/2f)
+                factor = width/wOrg.toFloat()
+                mat.postScale(factor, factor)
+                lp.width = wOrg*factor.toInt()
+                lp.height = hOrg*factor.toInt()
+            }
+            4 -> {
+                factor = width/wOrg.toFloat()
+                mat.postScale(-factor, factor)
+                mat.postTranslate(wOrg*factor, 0f)
+                lp.width = wOrg*factor.toInt()
+                lp.height = hOrg*factor.toInt()
+            }
+			5 -> {
+                mat.postRotate(270f, 0f, 0f)
+                factor = width/hOrg.toFloat()
+                mat.postScale(factor, -factor)
+                lp.width = hOrg*factor.toInt()
+                lp.height = wOrg*factor.toInt()
+            }
+			6 -> {
+                mat.postRotate(90f, 0f, 0f)
+                factor = width/wOrg.toFloat()
+                mat.postScale(factor, factor)
+                mat.postTranslate(hOrg*factor, 0f)
+                lp.width = hOrg*factor.toInt()
+                lp.height = wOrg*factor.toInt()
+            }
+            7 -> {
+                mat.postRotate(90f, 0f, 0f)
+                factor = width/wOrg.toFloat()
+                mat.postScale(factor, -factor)
+                mat.postTranslate(hOrg*factor, wOrg*factor)
+                lp.width = hOrg*factor.toInt()
+                lp.height = wOrg*factor.toInt()
+            }
+            8 -> {
+                mat.postRotate(270f, 0f, 0f)
+                factor = width/wOrg.toFloat()
+                mat.postScale(factor, factor)
+                mat.postTranslate(0f, wOrg*factor)
+                lp.width = hOrg*factor.toInt()
+                lp.height = wOrg*factor.toInt()
+            }
+		}
+		view.setLayoutParams(lp)
+		view.setImageMatrix(mat)
+		view.invalidate()
+	}
 
     companion object {
         private val RESULT_PICK_IMAGEFILE1: Int = 1001
