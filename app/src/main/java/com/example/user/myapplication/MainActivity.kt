@@ -2,6 +2,7 @@ package com.example.user.myapplication
 
 import android.app.Activity
 import android.view.View
+import android.view.WindowManager
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
@@ -284,15 +285,13 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
                 try {
                     val uri: Uri = resultdata.data
                     image_view.setImageBitmap(getImages(uri))
-                    println(getPathFromUri(uri))
                     val exifInterface = ExifInterface(getPathFromUri(uri))//ここで落ちている
                     var orientation: Int = (exifInterface.getAttribute(ExifInterface.TAG_ORIENTATION)).toInt()
                     println(orientation)
-
-                    //var wm: WindowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-                    //val disp = wm.defaultDisplay
-                    //var viewWidth = disp.getWidth()
-                    //setMatrix(image_view, getImages(uri), orientation, viewWidth)
+                    // var wm: WindowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+                    // val disp = wm.defaultDisplay
+                    // var viewWidth = disp.getWidth()
+                    // setMatrix(image_view, getImages(uri), orientation, viewWidth)
 
                 } catch(e: IOException) {
                     e.printStackTrace()
@@ -301,11 +300,14 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         }
         if (requestCode == RESULT_CAMERA) {
             var image_view: ImageView = src_img1
-            println(cameraFilePath)// storage/emulated/0/Pictures/IMG/01202754.jpg
             val exifInterface = ExifInterface(cameraFilePath)// FilePathで正常に動作する。
             var orientation: Int = (exifInterface.getAttribute(ExifInterface.TAG_ORIENTATION)).toInt()
-            println(orientation)
             image_view.setImageURI(ImgUri)
+            println(orientation)
+            // var wm: WindowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+            // val disp = wm.defaultDisplay
+            // var viewWidth = disp.getWidth()
+            // setMatrix(image_view, getImages(ImgUri!!), orientation, viewWidth)
         }
     }
 
@@ -396,16 +398,6 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
             val bmp: Bitmap = BitmapFactory.decodeFileDescriptor(fDesc)
             parcelFileDesc.close()
             return bmp
-        } else{
-            throw error("parcelFileDesc is not exist")
-        }
-    }
-
-    private fun getImageFileDescriptor(uri: Uri): FileDescriptor{
-        val parcelFileDesc: ParcelFileDescriptor = this.getContentResolver().openFileDescriptor(uri, "r")
-        if(parcelFileDesc != null) {
-            val fDesc: FileDescriptor = parcelFileDesc.fileDescriptor
-            return fDesc
         } else{
             throw error("parcelFileDesc is not exist")
         }
