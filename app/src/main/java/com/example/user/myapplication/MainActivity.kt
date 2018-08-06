@@ -40,6 +40,7 @@ import org.opencv.features2d.ORB
 import org.opencv.features2d.DescriptorMatcher
 import org.opencv.features2d.Features2d
 import org.opencv.imgproc.Imgproc
+import org.nield.kotlinstatistics.median
 
 import java.text.SimpleDateFormat
 import java.io.FileDescriptor
@@ -82,6 +83,9 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         distanceSpinner!!.setOnItemSelectedListener(this)
         distanceValueList.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         distanceSpinner!!.setAdapter(distanceValueList)
+
+        val median = sequenceOf(1.0, 3.0, 5.0).median()
+        println("median" + median) // prints "3.0"
 
         if(!OpenCVLoader.initDebug()) {
             Log.d("OpenCV", "error_openCV")

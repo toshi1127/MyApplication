@@ -32,6 +32,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile project(':openCVLibrary341')
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    compile 'org.nield:kotlin-statistics:1.1.3'
 }
 repositories {
     mavenCentral()
