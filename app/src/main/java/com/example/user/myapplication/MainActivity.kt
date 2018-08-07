@@ -51,6 +51,7 @@ import java.util.*
 
 import com.example.user.myapplication.util.featureDrawer
 import com.example.user.myapplication.util.imageLoader
+import com.example.user.myapplication.match.normalMatching
 
 class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
 
@@ -151,43 +152,12 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
                 val (keypoint1, keypoint2) = featureMatcher.featureExtraction()
                 val (descriptor1, descriptor2) = featureMatcher.featureDraw(keypoint1, keypoint2)
 
-                // マッチング (アルゴリズムにはBruteForceを使用)
-                val matcher = DescriptorMatcher.create("BruteForce-Hamming")
-
-                val matches_list: MutableList<DMatch> = mutableListOf()
-                val match12 = MatOfDMatch().apply { matcher.match(descriptor1, descriptor2, this) }
-                val match21 = MatOfDMatch().apply { matcher.match(descriptor2, descriptor1, this) }
-
-                // クロスチェック(1→2と2→1の両方でマッチしたものだけを残して精度を高める)
-                val size: Int = match12.toArray().size - 1
-                val match12_array = match12.toArray()
-                val match21_array = match21.toArray()
-                var count: Int = 0
-                for(i in 0..size) {
-                    val forward: DMatch =match12_array[i]
-                    val backward: DMatch = match21_array[forward.trainIdx]
-                    if(backward.trainIdx == forward.queryIdx) {
-                        if(backward.distance <= distance){
-                            matches_list.add(forward)
-                            count++
-                        }
-                    }
-                }
-
-                val matches = MatOfDMatch().apply { this.fromList(matches_list) }
-
-                //RANSACによるモデルの推定
-                var pts1: MutableList<Point> = mutableListOf()
-                var pts2: MutableList<Point> = mutableListOf()
-                for(mat in matches_list) {
-                    pts1.add(keypoint1.toList().get(mat.queryIdx).pt)
-                    pts2.add(keypoint2.toList().get(mat.trainIdx).pt)
-                }
-
-                var pts1After = MatOfPoint2f()
-                pts1After.fromList(pts1)
-                var pts2After = MatOfPoint2f()
-                pts2After.fromList(pts2)
+                // マッチング (アルゴリズムにはBRUTEFORCE_HAMMINGを使用)
+                val matchAlg = DescriptorMatcher.BRUTEFORCE_HAMMING
+                val normalMatch = normalMatching(matchAlg, distance, keypoint1, keypoint2)
+                val (matches_list, count) = normalMatch.featurePointMatchs(descriptor1, descriptor2)
+                val (pts1After, pts2After) = normalMatch.filterMatches(matches_list)
+                // val matches = MatOfDMatch().apply { this.fromList(matches_list) }
 
                 var inliers = Mat()
 
