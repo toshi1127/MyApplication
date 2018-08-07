@@ -3,6 +3,7 @@ package com.example.user.myapplication
 import android.app.Activity
 import android.view.View
 import android.view.WindowManager
+import android.widget.ImageView
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
@@ -47,6 +48,9 @@ import java.io.FileDescriptor
 import java.io.File
 import java.io.IOException
 import java.util.*
+
+import com.example.user.myapplication.util.featureDrawer
+import com.example.user.myapplication.util.imageLoader
 
 class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
 
@@ -131,40 +135,26 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
             intent.setAction(MediaStore.ACTION_IMAGE_CAPTURE)
             intent.putExtra(MediaStore.EXTRA_OUTPUT,ImgUri)
             startActivityForResult(intent, RESULT_CAMERA)
-
-            //そのまま取り込む方法（画像の解像度が下がる）
-            /*
-            val intent = Intent()
-            intent.action = MediaStore.ACTION_IMAGE_CAPTURE
-            startActivityForResult(intent, RESULT_CAMERA)*/
         }
 
         // 決定ボタンのリスナー
         decition_btn.setOnClickListener {
             try {
                 // src_img1の画像をMatに
-                var bitmap: Bitmap = Bitmap.createScaledBitmap(getBitmapFromImageView(src_img1), 640, 480, false)
-                val scene1 = Mat(bitmap!!.height, bitmap!!.width, CvType.CV_8UC1).apply { Utils.bitmapToMat(bitmap, this) }
+                val scene1 = imageLoader(src_img1).getImageMat()
 
                 // src_img2の画像をMatに
-                bitmap = Bitmap.createScaledBitmap(getBitmapFromImageView(src_img2), 640, 480, false)
-                val scene2 = Mat(bitmap!!.height, bitmap!!.width, CvType.CV_8UC1).apply { Utils.bitmapToMat(bitmap, this) }
-
-                // アルゴリズムはORB or AKAZEで
-                val algorithm = if (selectItem == "ORB") ORB.create() else AKAZE.create()
+                val scene2 = imageLoader(src_img2).getImageMat()
 
                 // 特徴点抽出
-                val keypoint1 = MatOfKeyPoint().apply { algorithm.detect(scene1, this) }
-                val keypoint2 = MatOfKeyPoint().apply { algorithm.detect(scene2, this) }
-
-                // 特徴量記述
-                val descriptor1 = Mat().apply { algorithm.compute(scene1, keypoint1, this) }
-                val descriptor2 = Mat().apply { algorithm.compute(scene2, keypoint2, this) }
+                val featureMatcher = featureDrawer(selectItem, scene1, scene2)
+                val (keypoint1, keypoint2) = featureMatcher.featureExtraction()
+                val (descriptor1, descriptor2) = featureMatcher.featureDraw(keypoint1, keypoint2)
 
                 // マッチング (アルゴリズムにはBruteForceを使用)
                 val matcher = DescriptorMatcher.create("BruteForce-Hamming")
 
-                var matches_list: MutableList<DMatch> = mutableListOf()
+                val matches_list: MutableList<DMatch> = mutableListOf()
                 val match12 = MatOfDMatch().apply { matcher.match(descriptor1, descriptor2, this) }
                 val match21 = MatOfDMatch().apply { matcher.match(descriptor2, descriptor1, this) }
 
