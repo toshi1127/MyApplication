@@ -20,6 +20,7 @@ class imageLoader(Img: ImageView) {
 
     fun getImageMat(): Mat {
         val imageMat = Mat(bitmap!!.height, bitmap!!.width, CvType.CV_8UC1).apply { Utils.bitmapToMat(bitmap, this) }
+        println("画像の生成")
         return imageMat
     }
 }
