@@ -21,7 +21,6 @@ class featureDrawer(detectorName: String, private val img1: Mat, private val img
     fun featureDraw (keypoint1: MatOfKeyPoint, keypoint2: MatOfKeyPoint) : Pair<Mat, Mat>{
         val descriptor1 = Mat().apply { detector.compute(img1, keypoint1, this) }
         val descriptor2 = Mat().apply { detector.compute(img2, keypoint2, this) }
-        print("featureDraw")
 
         return Pair(descriptor1, descriptor2)
     }
