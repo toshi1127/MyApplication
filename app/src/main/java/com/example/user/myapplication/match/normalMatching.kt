@@ -58,6 +58,9 @@ class normalMatching(private val matchAlg: Int, private val distance: Int, priva
     fun filterMatches(matches_list: MutableList<DMatch>): Pair<MatOfPoint2f, MatOfPoint2f>{
         var pts1: MutableList<Point> = mutableListOf()
         var pts2: MutableList<Point> = mutableListOf()
+
+        matches_list.sortBy { match -> match.distance }
+
         for(mat in matches_list) {
             pts1.add(keypoint1.toList().get(mat.queryIdx).pt)
             pts2.add(keypoint2.toList().get(mat.trainIdx).pt)
