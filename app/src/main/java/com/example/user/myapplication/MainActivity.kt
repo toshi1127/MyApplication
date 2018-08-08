@@ -174,7 +174,8 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
                 }
 
                 val calculateChanger = calculateChange(scene1, scene2)
-                val calculateChangeImage = calculateChanger.homographyCalculateChange(RansacMatch)
+                // val calculateChangeImage = calculateChanger.homographyCalculateChange(RansacMatch)
+                val calculateChangeImage = calculateChanger.affineCalculateChange(pts1After, pts2After)
 
                 for (i in 0 until matches_list.size) {
                     val values = inliers.get(i, 0)
