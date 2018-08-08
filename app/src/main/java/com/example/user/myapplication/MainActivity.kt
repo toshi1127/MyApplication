@@ -52,6 +52,7 @@ import java.util.*
 import com.example.user.myapplication.util.featureDrawer
 import com.example.user.myapplication.util.imageLoader
 import com.example.user.myapplication.match.normalMatching
+import com.example.user.myapplication.calculateChange.calculateChange
 
 class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
 
@@ -67,6 +68,9 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
     var filePath: String? = null
     var cameraFilePath: String? = null
     var RANSACMatched: MutableList<DMatch> = mutableListOf()
+
+    var Img1: Bitmap? = null
+    var Img2: Bitmap? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -142,10 +146,12 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         decition_btn.setOnClickListener {
             try {
                 // src_img1の画像をMatに
-                val scene1 = imageLoader(src_img1).getImageMat()
+                // val scene1 = imageLoader(src_img1).getImageMat()
+                val scene1 = Mat(Img1!!.height, Img1!!.width, CvType.CV_8UC1).apply { Utils.bitmapToMat(Img1, this) }
 
                 // src_img2の画像をMatに
-                val scene2 = imageLoader(src_img2).getImageMat()
+                // val scene2 = imageLoader(src_img2).getImageMat()
+                val scene2 = Mat(Img2!!.height, Img2!!.width, CvType.CV_8UC1).apply { Utils.bitmapToMat(Img2, this) }
 
                 // 特徴点抽出
                 val featureMatcher = featureDrawer(selectItem, scene1, scene2)
@@ -153,7 +159,7 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
                 val (descriptor1, descriptor2) = featureMatcher.featureDraw(keypoint1, keypoint2)
 
                 // マッチング (アルゴリズムにはBRUTEFORCE_HAMMINGを使用)
-                val matchAlg = DescriptorMatcher.BRUTEFORCE_HAMMING
+                val matchAlg = DescriptorMatcher.FLANNBASED
                 val normalMatch = normalMatching(matchAlg, distance, keypoint1, keypoint2)
                 val (matches_list, count) = normalMatch.featurePointMatchs(descriptor1, descriptor2)
                 val (pts1After, pts2After) = normalMatch.filterMatches(matches_list)
@@ -161,11 +167,14 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
 
                 var inliers = Mat()
 
-                var RansacMatch = findHomography(pts2After, pts1After, RANSAC, 1.0, inliers, 2000, 0.995)
+                var RansacMatch = findHomography(pts2After, pts1After, RANSAC, 5.0, inliers, 2000, 0.995)
 
                 if (RansacMatch.empty()){
                     return@setOnClickListener
                 }
+
+                val calculateChanger = calculateChange(scene1, scene2)
+                val calculateChangeImage = calculateChanger.homographyCalculateChange(RansacMatch)
 
                 for (i in 0 until matches_list.size) {
                     val values = inliers.get(i, 0)
@@ -181,7 +190,7 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
                 val RANSACMatches = MatOfDMatch().apply { this.fromList(RANSACMatched) }
 
                 // 結果画像の背景真っ黒になるのを防ぐ
-                val scene1rgb = Mat().apply { Imgproc.cvtColor(scene1, this, Imgproc.COLOR_RGBA2RGB, 1) }
+                val scene1rgb = Mat().apply { Imgproc.cvtColor(calculateChangeImage, this, Imgproc.COLOR_RGBA2RGB, 1) }
                 val scene2rgb = Mat().apply { Imgproc.cvtColor(scene2, this, Imgproc.COLOR_RGBA2RGB, 1) }
 
                 // マッチ結果を出力
@@ -248,6 +257,11 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
             if(resultdata?.data != null) {
                 try {
                     val uri: Uri = resultdata.data
+                    if (requestCode == RESULT_PICK_IMAGEFILE1) {
+                        Img1 = getImages(uri)
+                    } else {
+                        Img2 = getImages(uri)
+                    }
                     image_view.setImageBitmap(getImages(uri))
                     val exifInterface = ExifInterface(getPathFromUri(uri))//ここで落ちている
                     var orientation: Int = (exifInterface.getAttribute(ExifInterface.TAG_ORIENTATION)).toInt()
