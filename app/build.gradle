@@ -33,6 +33,8 @@ dependencies {
     compile project(':openCVLibrary341')
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     compile 'org.nield:kotlin-statistics:1.1.3'
+    compile "org.jetbrains.kotlinx:kotlinx-coroutines-android:0.22.2"
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.24.0'
 }
 repositories {
     mavenCentral()
