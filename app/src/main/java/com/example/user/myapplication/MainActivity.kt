@@ -36,8 +36,6 @@ import org.opencv.android.Utils
 import org.opencv.core.*
 import org.opencv.calib3d.Calib3d.findHomography
 import org.opencv.calib3d.Calib3d.RANSAC
-import org.opencv.features2d.AKAZE
-import org.opencv.features2d.ORB
 import org.opencv.features2d.DescriptorMatcher
 import org.opencv.features2d.Features2d
 import org.opencv.imgproc.Imgproc
@@ -48,6 +46,10 @@ import java.io.FileDescriptor
 import java.io.File
 import java.io.IOException
 import java.util.*
+
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.android.UI
 
 import com.example.user.myapplication.util.featureDrawer
 import com.example.user.myapplication.util.imageLoader
@@ -148,13 +150,17 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
                 // src_img1の画像をMatに
                 // val scene1 = imageLoader(src_img1).getImageMat()
                 val scene1 = Mat(Img1!!.height, Img1!!.width, CvType.CV_8UC1).apply { Utils.bitmapToMat(Img1, this) }
+                val resizeImage1 = Mat(((Img1!!.height)*0.9).toInt(), ((Img1!!.width)*0.9).toInt(), CvType.CV_8UC1)
+                Imgproc.resize( scene1, resizeImage1, resizeImage1.size() )
 
                 // src_img2の画像をMatに
                 // val scene2 = imageLoader(src_img2).getImageMat()
                 val scene2 = Mat(Img2!!.height, Img2!!.width, CvType.CV_8UC1).apply { Utils.bitmapToMat(Img2, this) }
+                val resizeImage2 = Mat(((Img2!!.height)*0.9).toInt(), ((Img2!!.width)*0.9).toInt(), CvType.CV_8UC1)
+                Imgproc.resize( scene2, resizeImage2, resizeImage2.size() )
 
                 // 特徴点抽出
-                val featureMatcher = featureDrawer(selectItem, scene1, scene2)
+                val featureMatcher = featureDrawer(selectItem, resizeImage1, resizeImage2)
                 val (keypoint1, keypoint2) = featureMatcher.featureExtraction()
                 val (descriptor1, descriptor2) = featureMatcher.featureDraw(keypoint1, keypoint2)
 
@@ -173,9 +179,9 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
                     return@setOnClickListener
                 }
 
-                val calculateChanger = calculateChange(scene1, scene2)
+                // val calculateChanger = calculateChange(scene1, scene2)
                 // val calculateChangeImage = calculateChanger.homographyCalculateChange(RansacMatch)
-                val calculateChangeImage = calculateChanger.affineCalculateChange(pts1After, pts2After)
+                // val calculateChangeImage = calculateChanger.affineCalculateChange(pts1After, pts2After)
 
                 for (i in 0 until matches_list.size) {
                     val values = inliers.get(i, 0)
@@ -191,17 +197,20 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
                 val RANSACMatches = MatOfDMatch().apply { this.fromList(RANSACMatched) }
 
                 // 結果画像の背景真っ黒になるのを防ぐ
-                val scene1rgb = Mat().apply { Imgproc.cvtColor(calculateChangeImage, this, Imgproc.COLOR_RGBA2RGB, 1) }
-                val scene2rgb = Mat().apply { Imgproc.cvtColor(scene2, this, Imgproc.COLOR_RGBA2RGB, 1) }
+                val scene1rgb = Mat().apply { Imgproc.cvtColor(resizeImage1, this, Imgproc.COLOR_RGBA2RGB, 1) }
+                val scene2rgb = Mat().apply { Imgproc.cvtColor(resizeImage2, this, Imgproc.COLOR_RGBA2RGB, 1) }
 
                 // マッチ結果を出力
                 val dest = scene1.clone().apply {
                     Features2d.drawMatches(scene1rgb, keypoint1, scene2rgb, keypoint2, RANSACMatches, this)
                 }
 
-                val result_btm: Bitmap = Bitmap.createBitmap(dest.cols(), dest.rows(), Bitmap.Config.ARGB_8888)
-                        .apply { Utils.matToBitmap(dest, this) }
+                val result_btm: Bitmap = Bitmap.createBitmap(dest.cols(), dest.rows(), Bitmap.Config.ARGB_8888).apply { Utils.matToBitmap(dest, this) }
 
+                val resizeesultImg = Mat(((dest.cols())*0.7).toInt(), ((dest.rows())*0.7).toInt(), CvType.CV_8UC1)
+                Imgproc.resize( dest, resizeesultImg, resizeImage1.size() )
+
+                // val result_btm: Bitmap = Bitmap.createBitmap(dest.cols(), dest.rows(), Bitmap.Config.ARGB_8888).apply { Utils.matToBitmap(dest, this) }
                 // マッチング結果画像の出力
                 result_img.setImageBitmap(result_btm)
 
