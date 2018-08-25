@@ -49,7 +49,7 @@ import java.util.*
 
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.CommonPool
 
 import com.example.user.myapplication.util.featureDrawer
 import com.example.user.myapplication.util.imageLoader
@@ -163,14 +163,18 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
                 val featureMatcher = featureDrawer(selectItem, resizeImage1, resizeImage2)
                 val (keypoint1, keypoint2) = featureMatcher.featureExtraction()
                 val (descriptor1, descriptor2) = featureMatcher.featureDraw(keypoint1, keypoint2)
-
-                // マッチング (アルゴリズムにはBRUTEFORCE_HAMMINGを使用)
                 val matchAlg = DescriptorMatcher.FLANNBASED
-                val normalMatch = normalMatching(matchAlg, distance, keypoint1, keypoint2)
-                val (matches_list, count) = normalMatch.featurePointMatchs(descriptor1, descriptor2)
-                val (pts1After, pts2After) = normalMatch.filterMatches(matches_list)
-                // val matches = MatOfDMatch().apply { this.fromList(matches_list) }
 
+                val normalMatch = normalMatching(matchAlg, distance, keypoint1, keypoint2)
+                fun matchingResult(matchAlg: Int, distance: Int, keypoint1: MatOfKeyPoint, keypoint2: MatOfKeyPoint): Deferred<Pair<MatOfPoint2f, MatOfPoint2f>> = async(CommonPool) {
+                    // マッチング (アルゴリズムにはBRUTEFORCE_HAMMINGを使用)
+                    val (matches_list, count) = normalMatch.featurePointMatchs(descriptor1, descriptor2)
+                    val (pts1After, pts2After) = normalMatch.filterMatches(matches_list)
+                    return@async Pair(pts1After, pts2After)
+                    // val matches = MatOfDMatch().apply { this.fromList(matches_list) }
+                }
+
+                val (pts1After, pts2After) = matchingResult(matchAlg, distance, keypoint1, keypoint2).await()
                 var inliers = Mat()
 
                 var RansacMatch = findHomography(pts2After, pts1After, RANSAC, 5.0, inliers, 2000, 0.995)
