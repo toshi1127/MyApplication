@@ -40,6 +40,7 @@ import org.nield.kotlinstatistics.median
 import retrofit2.Call
 import retrofit2.http.POST
 import retrofit2.http.Body
+import android.util.Base64
 
 import java.text.SimpleDateFormat
 import java.io.FileDescriptor
@@ -56,7 +57,11 @@ import com.example.user.myapplication.util.featureDrawer
 import com.example.user.myapplication.util.imageLoader
 import com.example.user.myapplication.match.normalMatching
 import com.example.user.myapplication.calculateChange.calculateChange
+import com.example.user.myapplication.util.apiServices.getMatchingResultImages
+import com.example.user.myapplication.util.receiveData.ZipApiData
+import com.example.user.myapplication.util.receiveData.resultImages
 import kotlinx.coroutines.experimental.launch
+import retrofit2.http.Query
 
 class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
 
@@ -176,6 +181,8 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
                 var pts2After: MatOfPoint2f ?= null
 
                 launch(UI) {
+//                    val Img :Bitmap = convert(getResultImage(imageLoader(src_img1)).await())
+                    print(getResultImage(imageLoader(src_img1)).await())
 //                    val(matches_list2, count2) = featurePointMatchsResult(normalMatch, descriptor1, descriptor2).await()
 //                    matches_list = matches_list2
 //                    count = count2
@@ -303,6 +310,17 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
             // var viewWidth = disp.getWidth()
             // setMatrix(image_view, getImages(ImgUri!!), orientation, viewWidth)
         }
+    }
+
+    // Base64 to Bitmap
+    @Throws(IllegalArgumentException::class)
+    fun convert(base64Str: String): Bitmap {
+        val decodedBytes = Base64.decode(
+                base64Str.substring(base64Str.indexOf(",") + 1),
+                Base64.DEFAULT
+        )
+
+        return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
     }
 
     fun getPathFromUri(uri : Uri) : String? {
@@ -442,9 +460,9 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         return@async Pair(pts1After, pts2After)
     }
 
-    private fun getResultImage(targetImage: Mat): Deferred<Mat> = async(CommonPool) {
-        val ResultImageMat = Mat()
-        return@async ResultImageMat
+    private fun getResultImage(targetImage: imageLoader): Deferred<Call<ZipApiData>> = async(CommonPool) {
+        val service = getMatchingResultImages.createService()
+        return@async service.apiDemo("1000001")
     }
 
     private fun setMatrix(view: ImageView, bitmap: Bitmap, orientation: Int, width: Int){
