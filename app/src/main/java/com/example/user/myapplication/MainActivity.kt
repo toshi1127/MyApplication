@@ -2,11 +2,8 @@ package com.example.user.myapplication
 
 import android.app.Activity
 import android.view.View
-import android.view.WindowManager
 import android.widget.ImageView
 import android.content.ContentUris
-import android.content.ContentValues
-import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 import android.os.Build
@@ -40,6 +37,9 @@ import org.opencv.features2d.DescriptorMatcher
 import org.opencv.features2d.Features2d
 import org.opencv.imgproc.Imgproc
 import org.nield.kotlinstatistics.median
+import retrofit2.Call
+import retrofit2.http.POST
+import retrofit2.http.Body
 
 import java.text.SimpleDateFormat
 import java.io.FileDescriptor
@@ -176,53 +176,53 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
                 var pts2After: MatOfPoint2f ?= null
 
                 launch(UI) {
-                    val(matches_list2, count2) = featurePointMatchsResult(normalMatch, descriptor1, descriptor2).await()
-                    matches_list = matches_list2
-                    count = count2
-
-                    val(pts1After2, pts2After2) = filterMatchesResult(normalMatch, matches_list2).await()
-                    pts1After = pts1After2
-                    pts2After = pts2After2
-
-                    var inliers = Mat()
-
-                    var RansacMatch = findHomography(pts2After, pts1After, RANSAC, 5.0, inliers, 2000, 0.995)
-                    for (i in 0 until matches_list!!.size) {
-                        val values = inliers.get(i, 0)
-                        if (values[0] == 1.0) {
-                            inliersCounter++
-                            RANSACMatched.add(matches_list!!.get(i))
-                        }
-                    }
-
-                    Score = inliersCounter.toDouble()/matches_list!!.size.toDouble()
-
-                    println("Score" + Score)
-                    val RANSACMatches = MatOfDMatch().apply { this.fromList(RANSACMatched) }
-
-                    // 結果画像の背景真っ黒になるのを防ぐ
-                    val scene1rgb = Mat().apply { Imgproc.cvtColor(scene1, this, Imgproc.COLOR_RGBA2RGB, 1) }
-                    val scene2rgb = Mat().apply { Imgproc.cvtColor(scene2, this, Imgproc.COLOR_RGBA2RGB, 1) }
-
-                    // マッチ結果を出力
-                    val dest = scene1.clone().apply {
-                        Features2d.drawMatches(scene1rgb, keypoint1, scene2rgb, keypoint2, RANSACMatches, this)
-                    }
-
-                    val result_btm: Bitmap = Bitmap.createBitmap(dest.cols(), dest.rows(), Bitmap.Config.ARGB_8888).apply { Utils.matToBitmap(dest, this) }
-
-                    val resizeesultImg = Mat(((dest.cols())*0.7).toInt(), ((dest.rows())*0.7).toInt(), CvType.CV_8UC1)
-                    Imgproc.resize( dest, resizeesultImg, scene1.size() )
-
-                    // val result_btm: Bitmap = Bitmap.createBitmap(dest.cols(), dest.rows(), Bitmap.Config.ARGB_8888).apply { Utils.matToBitmap(dest, this) }
-                    // マッチング結果画像の出力
-                    result_img.setImageBitmap(result_btm)
-
-                    // マッチング数を出力
-                    count_txt.text = "マッチング数: ${count}"
-
-                    // Scoreを出力
-                    score.text = "Score: ${Score}"
+//                    val(matches_list2, count2) = featurePointMatchsResult(normalMatch, descriptor1, descriptor2).await()
+//                    matches_list = matches_list2
+//                    count = count2
+//
+//                    val(pts1After2, pts2After2) = filterMatchesResult(normalMatch, matches_list2).await()
+//                    pts1After = pts1After2
+//                    pts2After = pts2After2
+//
+//                    var inliers = Mat()
+//
+//                    var RansacMatch = findHomography(pts2After, pts1After, RANSAC, 5.0, inliers, 2000, 0.995)
+//                    for (i in 0 until matches_list!!.size) {
+//                        val values = inliers.get(i, 0)
+//                        if (values[0] == 1.0) {
+//                            inliersCounter++
+//                            RANSACMatched.add(matches_list!!.get(i))
+//                        }
+//                    }
+//
+//                    Score = inliersCounter.toDouble()/matches_list!!.size.toDouble()
+//
+//                    println("Score" + Score)
+//                    val RANSACMatches = MatOfDMatch().apply { this.fromList(RANSACMatched) }
+//
+//                    // 結果画像の背景真っ黒になるのを防ぐ
+//                    val scene1rgb = Mat().apply { Imgproc.cvtColor(scene1, this, Imgproc.COLOR_RGBA2RGB, 1) }
+//                    val scene2rgb = Mat().apply { Imgproc.cvtColor(scene2, this, Imgproc.COLOR_RGBA2RGB, 1) }
+//
+//                    // マッチ結果を出力
+//                    val dest = scene1.clone().apply {
+//                        Features2d.drawMatches(scene1rgb, keypoint1, scene2rgb, keypoint2, RANSACMatches, this)
+//                    }
+//
+//                    val result_btm: Bitmap = Bitmap.createBitmap(dest.cols(), dest.rows(), Bitmap.Config.ARGB_8888).apply { Utils.matToBitmap(dest, this) }
+//
+//                    val resizeesultImg = Mat(((dest.cols())*0.7).toInt(), ((dest.rows())*0.7).toInt(), CvType.CV_8UC1)
+//                    Imgproc.resize( dest, resizeesultImg, scene1.size() )
+//
+//                    // val result_btm: Bitmap = Bitmap.createBitmap(dest.cols(), dest.rows(), Bitmap.Config.ARGB_8888).apply { Utils.matToBitmap(dest, this) }
+//                    // マッチング結果画像の出力
+//                    result_img.setImageBitmap(result_btm)
+//
+//                    // マッチング数を出力
+//                    count_txt.text = "マッチング数: ${count}"
+//
+//                    // Scoreを出力
+//                    score.text = "Score: ${Score}"
 
                 }
 
@@ -442,7 +442,12 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         return@async Pair(pts1After, pts2After)
     }
 
-     private fun setMatrix(view: ImageView, bitmap: Bitmap, orientation: Int, width: Int){
+    private fun getResultImage(targetImage: Mat): Deferred<Mat> = async(CommonPool) {
+        val ResultImageMat = Mat()
+        return@async ResultImageMat
+    }
+
+    private fun setMatrix(view: ImageView, bitmap: Bitmap, orientation: Int, width: Int){
 		view.setScaleType(ScaleType.MATRIX)
 		view.setImageBitmap(bitmap)
 		var wOrg = bitmap.getWidth()
