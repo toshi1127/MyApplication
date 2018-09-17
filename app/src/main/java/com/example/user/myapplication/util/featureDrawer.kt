@@ -11,18 +11,30 @@ import org.opencv.features2d.ORB
 class featureDrawer(detectorName: String, private val img1: Mat, private val img2: Mat) {
     val detector = if (detectorName == "ORB") ORB.create() else AKAZE.create()
 
-    fun featureExtraction () : Pair<MatOfKeyPoint, MatOfKeyPoint>{
+    fun featureExtractions () : Pair<MatOfKeyPoint, MatOfKeyPoint>{
         val keypoint1 = MatOfKeyPoint().apply { detector.detect(img1, this) }
         val keypoint2 = MatOfKeyPoint().apply { detector.detect(img2, this) }
 
         return Pair(keypoint1, keypoint2)
     }
 
-    fun featureDraw (keypoint1: MatOfKeyPoint, keypoint2: MatOfKeyPoint) : Pair<Mat, Mat>{
+    fun featureExtraction (img: Mat) : MatOfKeyPoint{
+        val keypoint = MatOfKeyPoint().apply { detector.detect(img, this) }
+
+        return keypoint
+    }
+
+    fun featureDraws (keypoint1: MatOfKeyPoint, keypoint2: MatOfKeyPoint) : Pair<Mat, Mat>{
         val descriptor1 = Mat().apply { detector.compute(img1, keypoint1, this) }
         val descriptor2 = Mat().apply { detector.compute(img2, keypoint2, this) }
 
         return Pair(descriptor1, descriptor2)
+    }
+
+    fun featureDraw (keypoint: MatOfKeyPoint, img: Mat) : Mat{
+        val descriptor = Mat().apply { detector.compute(img, keypoint, this) }
+
+        return descriptor
     }
 
 }
