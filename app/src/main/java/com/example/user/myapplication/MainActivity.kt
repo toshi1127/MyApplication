@@ -58,6 +58,7 @@ import com.example.user.myapplication.util.imageLoader
 import com.example.user.myapplication.match.normalMatching
 import com.example.user.myapplication.calculateChange.calculateChange
 import com.example.user.myapplication.util.apiServices.getMatchingResultImages
+import com.example.user.myapplication.util.apiServices.getUserSample
 import com.example.user.myapplication.util.receiveData.ZipApiData
 import com.example.user.myapplication.util.receiveData.resultImages
 import kotlinx.coroutines.experimental.launch
@@ -81,12 +82,19 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
     var Img1: Bitmap? = null
     var Img2: Bitmap? = null
 
+    val mainViewModel = getUserSample()
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
 
         checkPermission()
+        launch {
+            val getUser = mainViewModel.fetchUser("toshi1127").await()
+            println("取得したユーザー :${getUser}")
+        }
 
         var algorithmsSpinner:Spinner = extractionAlgorithms
         var distanceSpinner:Spinner = distanceValues
@@ -155,13 +163,15 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         decition_btn.setOnClickListener {
             try {
                 // src_img1の画像をMatに
-                val scene1 = imageLoader(src_img1).getImageMat()
+                val scene1 = Mat(Img1!!.height, Img1!!.width, CvType.CV_8UC1).apply { Utils.bitmapToMat(Img1, this) }
+//                val scene1 = imageLoader(src_img1).getImageMat()
 //                val scene1 = Mat(Img1!!.height, Img1!!.width, CvType.CV_8UC1).apply { Utils.bitmapToMat(Img1, this) }
 //                val resizeImage1 = Mat(((Img1!!.height)*0.9).toInt(), ((Img1!!.width)*0.9).toInt(), CvType.CV_8UC1)
 //                Imgproc.resize( scene1, resizeImage1, resizeImage1.size() )
 
                 // src_img2の画像をMatに
-                val scene2 = imageLoader(src_img2).getImageMat()
+                val scene2 = Mat(Img2!!.height, Img2!!.width, CvType.CV_8UC1).apply { Utils.bitmapToMat(Img2, this) }
+//                val scene2 = imageLoader(src_img2).getImageMat()
 //                val scene2 = Mat(Img2!!.height, Img2!!.width, CvType.CV_8UC1).apply { Utils.bitmapToMat(Img2, this) }
 //                val resizeImage2 = Mat(((Img2!!.height)*0.9).toInt(), ((Img2!!.width)*0.9).toInt(), CvType.CV_8UC1)
 //                Imgproc.resize( scene2, resizeImage2, resizeImage2.size() )
