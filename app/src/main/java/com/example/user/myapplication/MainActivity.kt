@@ -76,6 +76,7 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
             Manifest.permission.READ_EXTERNAL_STORAGE )
     var ImgUri: Uri? = null
     var filePath: String? = null
+    var cameraFile: File? = null
     var cameraFilePath: String? = null
     var RANSACMatched: MutableList<DMatch> = mutableListOf()
 
@@ -146,12 +147,12 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
             filePath = String.format("%s/%s.jpg", cameraFolder.path, fileName)
 
             // capture画像のファイルパス
-            var cameraFile = File(filePath)
-            cameraFilePath = cameraFile.path
+            cameraFile = File(filePath)
+            cameraFilePath = cameraFile!!.path
             ImgUri = FileProvider.getUriForFile(
                     this,
                     getApplicationContext().getPackageName() + ".fileprovider",
-                    cameraFile)
+                    cameraFile!!)
 
             val intent = Intent()
             intent.setAction(MediaStore.ACTION_IMAGE_CAPTURE)
@@ -162,6 +163,9 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         // 決定ボタンのリスナー
         decition_btn.setOnClickListener {
             try {
+                launch(UI) {
+                    print(getResultImage(cameraFile!!).await())
+                }
                 // src_img1の画像をMatに
                 val scene1 = Mat(Img1!!.height, Img1!!.width, CvType.CV_8UC1).apply { Utils.bitmapToMat(Img1, this) }
 //                val scene1 = imageLoader(src_img1).getImageMat()
@@ -192,7 +196,7 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
 
                 launch(UI) {
 //                    val Img :Bitmap = convert(getResultImage(imageLoader(src_img1)).await())
-                    print(getResultImage(imageLoader(src_img1)).await())
+                    print(getResultImage(cameraFile!!).await())
 //                    val(matches_list2, count2) = featurePointMatchsResult(normalMatch, descriptor1, descriptor2).await()
 //                    matches_list = matches_list2
 //                    count = count2
@@ -470,9 +474,8 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         return@async Pair(pts1After, pts2After)
     }
 
-    private fun getResultImage(targetImage: imageLoader): Deferred<Call<ZipApiData>> = async(CommonPool) {
-        val service = getMatchingResultImages.createService()
-        return@async service.apiDemo("1000001")
+    private fun getResultImage(targetImage: File): Deferred<Any> = async(CommonPool) {
+        return@async getMatchingResultImages().getResultImages(targetImage)
     }
 
     private fun setMatrix(view: ImageView, bitmap: Bitmap, orientation: Int, width: Int){
