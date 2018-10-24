@@ -23,11 +23,9 @@ class getUserSample {
     fun fetchUser(userName: String): Deferred<Any> = async(CommonPool) {
         try {
             val userCall = githubApi.fetchUser(userName)
-            println(userCall.request())
             val response = userCall.execute()
             response?.let {
                 if (response.isSuccessful) {
-                    println(response.body()!!)
                     return@async response.body()!!
                 }
             }
