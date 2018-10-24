@@ -75,6 +75,7 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
     var Img2: Bitmap? = null
 
     val mainViewModel = getUserSample()
+    val getMatchingResultImagesModel = getMatchingResultImages()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -159,9 +160,10 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         // 決定ボタンのリスナー
         decition_btn.setOnClickListener {
             try {
-                launch(UI) {
+                launch {
                     println("画像処理を行います")
-                    print(getResultImage(cameraFile!!).await())
+                    val ResultImage = getMatchingResultImagesModel.getResultImages(cameraFile!!).await()
+                    print("画像処理結果: ${ResultImage}")
 //                    print(getResultImage(cameraFile!!).await())
                 }
 //                // src_img1の画像をMatに
@@ -480,7 +482,7 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
     }
 
     private fun getResultImage(targetImage: File): Deferred<Any> = async(CommonPool) {
-        return@async getMatchingResultImages().getResultImages(targetImage)
+        return@async getMatchingResultImages().getResultImages(targetImage).await()
     }
 
     private fun setMatrix(view: ImageView, bitmap: Bitmap, orientation: Int, width: Int){

@@ -9,15 +9,17 @@ import retrofit2.http.*
 
 
 interface getResultImages {
-//    @Headers(
-//            "Accept: application/json",
-//            "Content-type: application/json"
-//    )
+    @Headers(
+            "Accept: application/json",
+            "Content-type: application/json"
+    )
+//    @Multipart
+    @Streaming
     @POST("send")
     fun getResultImages(
             @Body body: HashMap<String, String>
 //            @Part("item") item: RequestBody,
 //            @Part("imageNumber") itemNumber: RequestBody,
 //            @Part targeImages: MultipartBody.Part
-    ): Call<User>
+    ): Call<Any>
 }
