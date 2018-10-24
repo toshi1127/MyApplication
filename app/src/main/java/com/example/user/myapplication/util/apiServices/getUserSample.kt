@@ -9,7 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class getUserSample {
     companion object {
-        private const val BASE_URL = "http://10.0.2.2"
+        private const val BASE_URL = "http://172.20.10.8"
     }
 
     private val retrofit: Retrofit by lazy {
