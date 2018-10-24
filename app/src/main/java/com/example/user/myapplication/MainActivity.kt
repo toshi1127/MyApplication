@@ -88,10 +88,10 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
             println("取得したユーザー :${getUser}")
         }
         // 新しくアクティビティを開く
-        val intent = Intent(this, SecondActivity::class.java)
-        intent.putExtra("number", 120)
-        intent.putExtra("string", "The message from MainActivity")
-        startActivityForResult(intent, MY_REQUEST_CODE)
+//        val intent = Intent(this, SecondActivity::class.java)
+//        intent.putExtra("number", 120)
+//        intent.putExtra("string", "The message from MainActivity")
+//        startActivityForResult(intent, MY_REQUEST_CODE)
 
         var algorithmsSpinner:Spinner = extractionAlgorithms
         var distanceSpinner:Spinner = distanceValues
@@ -160,6 +160,8 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         decition_btn.setOnClickListener {
             try {
                 launch(UI) {
+                    println("画像処理を行います")
+                    print(getResultImage(cameraFile!!).await())
                     print(getResultImage(cameraFile!!).await())
                 }
                 // src_img1の画像をMatに
@@ -192,6 +194,7 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
 
                 launch(UI) {
 //                    val Img :Bitmap = convert(getResultImage(imageLoader(src_img1)).await())
+                    println("画像処理を行います")
                     print(getResultImage(cameraFile!!).await())
 //                    val(matches_list2, count2) = featurePointMatchsResult(normalMatch, descriptor1, descriptor2).await()
 //                    matches_list = matches_list2

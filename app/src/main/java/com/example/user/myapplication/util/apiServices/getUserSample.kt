@@ -9,7 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class getUserSample {
     companion object {
-        private const val BASE_URL = "http://10.0.2.2"
+        private const val BASE_URL = "http://172.20.10.8"
     }
 
     private val retrofit: Retrofit by lazy {
@@ -23,9 +23,11 @@ class getUserSample {
     fun fetchUser(userName: String): Deferred<Any> = async(CommonPool) {
         try {
             val userCall = githubApi.fetchUser(userName)
+            println(userCall.request())
             val response = userCall.execute()
             response?.let {
                 if (response.isSuccessful) {
+                    println(response.body()!!)
                     return@async response.body()!!
                 }
             }
