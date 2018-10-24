@@ -31,15 +31,8 @@ import kotlinx.android.synthetic.main.activity_main.*
 import org.opencv.android.OpenCVLoader
 import org.opencv.android.Utils
 import org.opencv.core.*
-import org.opencv.calib3d.Calib3d.findHomography
-import org.opencv.calib3d.Calib3d.RANSAC
 import org.opencv.features2d.DescriptorMatcher
-import org.opencv.features2d.Features2d
-import org.opencv.imgproc.Imgproc
 import org.nield.kotlinstatistics.median
-import retrofit2.Call
-import retrofit2.http.POST
-import retrofit2.http.Body
 import android.util.Base64
 
 import java.text.SimpleDateFormat
@@ -54,15 +47,13 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 
 import com.example.user.myapplication.util.featureDrawer
-import com.example.user.myapplication.util.imageLoader
 import com.example.user.myapplication.match.normalMatching
-import com.example.user.myapplication.calculateChange.calculateChange
 import com.example.user.myapplication.util.apiServices.getMatchingResultImages
 import com.example.user.myapplication.util.apiServices.getUserSample
-import com.example.user.myapplication.util.receiveData.ZipApiData
-import com.example.user.myapplication.util.receiveData.resultImages
 import kotlinx.coroutines.experimental.launch
-import retrofit2.http.Query
+
+
+const val MY_REQUEST_CODE = 0
 
 class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
 
@@ -96,6 +87,11 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
             val getUser = mainViewModel.fetchUser("toshi1127").await()
             println("取得したユーザー :${getUser}")
         }
+        // 新しくアクティビティを開く
+        val intent = Intent(this, SecondActivity::class.java)
+        intent.putExtra("number", 120)
+        intent.putExtra("string", "The message from MainActivity")
+        startActivityForResult(intent, MY_REQUEST_CODE)
 
         var algorithmsSpinner:Spinner = extractionAlgorithms
         var distanceSpinner:Spinner = distanceValues
@@ -323,6 +319,12 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
             // val disp = wm.defaultDisplay
             // var viewWidth = disp.getWidth()
             // setMatrix(image_view, getImages(ImgUri!!), orientation, viewWidth)
+        }
+        if (requestCode == MY_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            println("推移しました")
+            // リクエストコードが一致してかつアクティビティが正常に終了していた場合、受け取った値を表示
+            val received = resultdata!!
+            Toast.makeText(this, "${received.extras.get("number")}, ${received.extras.get("string")}", Toast.LENGTH_LONG).show()
         }
     }
 
