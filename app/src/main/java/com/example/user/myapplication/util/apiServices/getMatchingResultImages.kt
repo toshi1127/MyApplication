@@ -34,7 +34,7 @@ class getMatchingResultImages {
     private val getMatchingResultImagesApi: getResultImages by lazy {
         retrofit.create(getResultImages::class.java)
     }
-    fun getResultImages(targetImage: File): Deferred<Any> = async(CommonPool) {
+    fun getResultImages(targetImage: File): Deferred<resultImages> = async(CommonPool) {
         try {
             val hashMap = HashMap<String, String>()
             var responseData: Any ?= null
@@ -53,11 +53,18 @@ class getMatchingResultImages {
             val response = getMatchingResultImages.execute()
             response?.let {
                 if (response.isSuccessful) {
-                    println("getMatchingResultImages: ${response.body()}")
-                    return@async response.body()!!
+                    val returnValue: resultImages = response.body()!!
+                    return@async returnValue
                 }
             }
             return@async resultImages()
+        }  catch (e: Exception) {
+            print("requestError:${e}")
+            return@async resultImages()
+        }
+    }
+}
+
 //            getMatchingResultImages.enqueue(object : Callback<Any> {
 //                override fun onFailure(call: Call<Any>, t: Throwable?) {
 //                    println("requestError:${t}")
@@ -70,8 +77,3 @@ class getMatchingResultImages {
 //            })
 //            println("getMatchingResultImages: ${responseData}")
 //            return@async responseData!!
-        }  catch (e: Exception) {
-            print("requestError:${e}")
-        }
-    }
-}

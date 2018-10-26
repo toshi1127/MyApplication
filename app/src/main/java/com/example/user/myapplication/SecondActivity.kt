@@ -13,18 +13,13 @@ class SecondActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_second)
 
-        println("hello")
-        println("${intent.extras.get("number")}, ${intent.extras.get("string")}")
-        // MainActivity から渡された値を表示
-        Toast.makeText(this, "${intent.extras.get("number")}, ${intent.extras.get("string")}", Toast.LENGTH_LONG).show()
+        println("セカンドページ: ${intent.extras.get("number")}, ${intent.extras.get("string")}, ${intent.extras.get("number")}")
 
         val button: Button = findViewById(R.id.button2)
         button.setOnClickListener {
 
             // 渡す値を設定
             val intent = Intent()
-            intent.putExtra("number", 300)
-            intent.putExtra("string", "The message from SecondActivity")
 
             // 情報を渡して MainActivity の onActivityResult を呼び出す
             setResult(Activity.RESULT_OK, intent)
