@@ -12,6 +12,7 @@ import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.util.Log
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.support.v4.app.ActivityCompat
 import android.content.Intent
@@ -41,16 +42,15 @@ import java.io.File
 import java.io.IOException
 import java.util.*
 
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 
 import com.example.user.myapplication.util.featureDrawer
 import com.example.user.myapplication.match.normalMatching
 import com.example.user.myapplication.util.apiServices.getMatchingResultImages
 import com.example.user.myapplication.util.apiServices.getUserSample
-import kotlinx.coroutines.experimental.launch
+import com.example.user.myapplication.util.receiveData.resultImages
+import kotlinx.coroutines.experimental.*
+import java.io.ByteArrayOutputStream
 
 
 const val MY_REQUEST_CODE = 0
@@ -84,15 +84,6 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         setContentView(R.layout.activity_main)
 
         checkPermission()
-        launch {
-            val getUser = mainViewModel.fetchUser("toshi1127").await()
-            println("取得したユーザー :${getUser}")
-        }
-        // 新しくアクティビティを開く
-//        val intent = Intent(this, SecondActivity::class.java)
-//        intent.putExtra("number", 120)
-//        intent.putExtra("string", "The message from MainActivity")
-//        startActivityForResult(intent, MY_REQUEST_CODE)
 
         var algorithmsSpinner:Spinner = extractionAlgorithms
         var distanceSpinner:Spinner = distanceValues
@@ -159,13 +150,25 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
 
         // 決定ボタンのリスナー
         decition_btn.setOnClickListener {
+            var ResultImage : resultImages ?= null
+            println("画像処理を行います")
+            runBlocking {
+                ResultImage = getMatchingResultImagesModel.getResultImages(cameraFile!!).await()
+                println("画像処理結果: ${ResultImage}")
+            }
+            launch(CommonPool) {
+                val getUser = mainViewModel.fetchUser("toshi1127").await()
+                println("取得したユーザー2 :${getUser}")
+            }
+            println("Done!")
+            println("画像処理結果2: ${ResultImage!!.image}")
+            val imageData : String ?= ResultImage!!.image
+            val intent = Intent(this, SecondActivity::class.java)
+            intent.putExtra("number", 120)
+            intent.putExtra("string", "The message from MainActivity")
+//            intent.putExtra("image", imageData)
+            startActivityForResult(intent, MY_REQUEST_CODE)
             try {
-                launch {
-                    println("画像処理を行います")
-                    val ResultImage = getMatchingResultImagesModel.getResultImages(cameraFile!!).await()
-                    print("画像処理結果: ${ResultImage}")
-//                    print(getResultImage(cameraFile!!).await())
-                }
 //                // src_img1の画像をMatに
 //                val scene1 = Mat(Img1!!.height, Img1!!.width, CvType.CV_8UC1).apply { Utils.bitmapToMat(Img1, this) }
 ////                val scene1 = imageLoader(src_img1).getImageMat()
@@ -327,9 +330,6 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         }
         if (requestCode == MY_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             println("推移しました")
-            // リクエストコードが一致してかつアクティビティが正常に終了していた場合、受け取った値を表示
-            val received = resultdata!!
-            Toast.makeText(this, "${received.extras.get("number")}, ${received.extras.get("string")}", Toast.LENGTH_LONG).show()
         }
     }
 
