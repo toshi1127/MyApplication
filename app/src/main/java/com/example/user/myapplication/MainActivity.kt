@@ -163,11 +163,13 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
             println("Done!")
             println("画像処理結果2: ${ResultImage!!.image}")
             val imageData : String ?= ResultImage!!.image
+            val uri = getImageUri(applicationContext, convert(imageData!!))
             val intent = Intent(this, SecondActivity::class.java)
             intent.putExtra("number", 120)
             intent.putExtra("string", "The message from MainActivity")
-//            intent.putExtra("image", imageData)
-            startActivityForResult(intent, MY_REQUEST_CODE)
+            println("imageURI :${uri}")
+            result_img.setImageBitmap(getImages(uri))
+//            startActivityForResult(intent, MY_REQUEST_CODE)
             try {
 //                // src_img1の画像をMatに
 //                val scene1 = Mat(Img1!!.height, Img1!!.width, CvType.CV_8UC1).apply { Utils.bitmapToMat(Img1, this) }
@@ -342,6 +344,21 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         )
 
         return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+    }
+
+    // Bitmap to URI
+    private fun getImageUri(context: Context, bitmapImage: Bitmap): Uri {
+        val bytes = ByteArrayOutputStream()
+        bitmapImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
+        val sdcard = Environment.getExternalStorageDirectory()
+        if (sdcard != null) {
+            val mediaDir = File(sdcard, "DCIM/Camera")
+            if (!mediaDir.exists()) {
+                mediaDir.mkdirs()
+            }
+        }
+        val path = MediaStore.Images.Media.insertImage(context.getContentResolver(), bitmapImage, "Title", null)
+        return Uri.parse(path)
     }
 
     fun getPathFromUri(uri : Uri) : String? {
