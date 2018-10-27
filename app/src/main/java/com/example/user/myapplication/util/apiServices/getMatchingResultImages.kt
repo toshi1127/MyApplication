@@ -20,7 +20,9 @@ import retrofit2.Response
 
 class getMatchingResultImages {
     companion object {
-        private const val BASE_URL = "http://192.168.11.3"
+        private const val BASE_URL = "http://10.0.2.2"
+//        private const val BASE_URL = "http://192.168.11.3"
+// private const val BASE_URL = "http://192.168.11.3"
     }
 
     private val gson: Gson by lazy {
@@ -34,20 +36,18 @@ class getMatchingResultImages {
     private val getMatchingResultImagesApi: getResultImages by lazy {
         retrofit.create(getResultImages::class.java)
     }
-    fun getResultImages(targetImage: File): Deferred<resultImages> = async(CommonPool) {
+    fun getResultImages(targetImage: String): Deferred<resultImages> = async(CommonPool) {
         try {
             val hashMap = HashMap<String, String>()
-            var responseData: Any ?= null
-            hashMap.put("name", "toshi")
-            hashMap.put("age", "21")
+            hashMap.put("targetImage", targetImage)
             println("targetImage: ${targetImage}")
-            val requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), targetImage.absoluteFile)
-            println("requestBody: ${requestFile}")
-            val requestBodys = MultipartBody.Part.createFormData("uploaded_file", targetImage.name, requestFile)
-            println("body: ${requestBodys}")
-            val ItemId = RequestBody.create(okhttp3.MultipartBody.FORM, "22")
-            val ImageNumber = RequestBody.create(okhttp3.MultipartBody.FORM, "1")
-            val getMatchingResultImages = getMatchingResultImagesApi.getResultImages(hashMap)
+//            val requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), targetImage.absoluteFile)
+//            println("requestBody: ${requestFile}")
+//            val requestBodys = MultipartBody.Part.createFormData("uploaded_file", targetImage.name, requestFile)
+//            println("body: ${requestBodys}")
+//            val ItemId = RequestBody.create(okhttp3.MultipartBody.FORM, "22")
+//            val ImageNumber = RequestBody.create(okhttp3.MultipartBody.FORM, "1")
+            val getMatchingResultImages = getMatchingResultImagesApi.getResultImages(targetImage)
             println("getMatchingResultImages: ${getMatchingResultImages.isExecuted}")
             println("getMatchingResultImages: ${getMatchingResultImages.request()}")
             val response = getMatchingResultImages.execute()
@@ -77,3 +77,23 @@ class getMatchingResultImages {
 //            })
 //            println("getMatchingResultImages: ${responseData}")
 //            return@async responseData!!
+//val hashMap = HashMap<String, String>()
+//hashMap.put("targetImageDate", targetImage)
+//println("targetImage: ${targetImage}")
+////            val requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), targetImage.absoluteFile)
+////            println("requestBody: ${requestFile}")
+////            val requestBodys = MultipartBody.Part.createFormData("uploaded_file", targetImage.name, requestFile)
+////            println("body: ${requestBodys}")
+////            val ItemId = RequestBody.create(okhttp3.MultipartBody.FORM, "22")
+////            val ImageNumber = RequestBody.create(okhttp3.MultipartBody.FORM, "1")
+//val getMatchingResultImages = getMatchingResultImagesApi.getResultImages(hashMap)
+//println("getMatchingResultImages: ${getMatchingResultImages.isExecuted}")
+//println("getMatchingResultImages: ${getMatchingResultImages.request()}")
+//val response = getMatchingResultImages.execute()
+//response?.let {
+//    if (response.isSuccessful) {
+//        val returnValue: resultImages = response.body()!!
+//        return@async returnValue
+//    }
+//}
+//return@async resultImages()

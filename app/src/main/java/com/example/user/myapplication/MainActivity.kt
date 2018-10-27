@@ -85,6 +85,11 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
 
         checkPermission()
 
+        launch(CommonPool) {
+            val getUser = mainViewModel.fetchUser("toshi1127").await()
+            println("取得したユーザー2 :${getUser}")
+        }
+
         var algorithmsSpinner:Spinner = extractionAlgorithms
         var distanceSpinner:Spinner = distanceValues
 
@@ -153,7 +158,8 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
             var ResultImage : resultImages ?= null
             println("画像処理を行います")
             runBlocking {
-                ResultImage = getMatchingResultImagesModel.getResultImages(cameraFile!!).await()
+                println("ImageToBase64:${encoder(cameraFilePath!!)}")
+                ResultImage = getMatchingResultImagesModel.getResultImages(encoder(cameraFilePath!!)).await()
                 println("画像処理結果: ${ResultImage}")
             }
             launch(CommonPool) {
@@ -346,6 +352,14 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
     }
 
+    // Image(Path) to Base64
+    @Throws(IllegalArgumentException::class)
+    fun encoder(filePath: String): String{
+        val bytes = File(filePath).readBytes()
+        val base64 = Base64.encodeToString(bytes, Base64.DEFAULT)
+        return base64
+    }
+
     // Bitmap to URI
     private fun getImageUri(context: Context, bitmapImage: Bitmap): Uri {
         val bytes = ByteArrayOutputStream()
@@ -498,9 +512,9 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         return@async Pair(pts1After, pts2After)
     }
 
-    private fun getResultImage(targetImage: File): Deferred<Any> = async(CommonPool) {
-        return@async getMatchingResultImages().getResultImages(targetImage).await()
-    }
+//    private fun getResultImage(targetImage: File): Deferred<Any> = async(CommonPool) {
+//        return@async getMatchingResultImages().getResultImages(targetImage).await()
+//    }
 
     private fun setMatrix(view: ImageView, bitmap: Bitmap, orientation: Int, width: Int){
 		view.setScaleType(ScaleType.MATRIX)

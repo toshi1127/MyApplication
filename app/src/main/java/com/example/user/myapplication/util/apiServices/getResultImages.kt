@@ -16,7 +16,7 @@ interface getResultImages {
 //    @Multipart
     @POST("send")
     fun getResultImages(
-            @Body body: HashMap<String, String>
+            @Body body: String
 //            @Part("item") item: RequestBody,
 //            @Part("imageNumber") itemNumber: RequestBody,
 //            @Part targeImages: MultipartBody.Part
