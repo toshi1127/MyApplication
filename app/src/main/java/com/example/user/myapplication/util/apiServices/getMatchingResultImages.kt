@@ -10,6 +10,7 @@ import kotlinx.coroutines.experimental.async
 import okhttp3.MediaType
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import com.google.gson.JsonObject
 import java.io.File
 import okhttp3.RequestBody
 import okhttp3.MultipartBody
@@ -38,6 +39,7 @@ class getMatchingResultImages {
     }
     fun getResultImages(targetImage: String): Deferred<resultImages> = async(CommonPool) {
         try {
+            val targetImageJSONData: JsonObject = JsonObject()
             val hashMap = HashMap<String, String>()
             hashMap.put("targetImage", targetImage)
             println("targetImage: ${targetImage}")
@@ -47,7 +49,7 @@ class getMatchingResultImages {
 //            println("body: ${requestBodys}")
 //            val ItemId = RequestBody.create(okhttp3.MultipartBody.FORM, "22")
 //            val ImageNumber = RequestBody.create(okhttp3.MultipartBody.FORM, "1")
-            val getMatchingResultImages = getMatchingResultImagesApi.getResultImages(targetImage)
+            val getMatchingResultImages = getMatchingResultImagesApi.getResultImages(targetImageJSONData)
             println("getMatchingResultImages: ${getMatchingResultImages.isExecuted}")
             println("getMatchingResultImages: ${getMatchingResultImages.request()}")
             val response = getMatchingResultImages.execute()

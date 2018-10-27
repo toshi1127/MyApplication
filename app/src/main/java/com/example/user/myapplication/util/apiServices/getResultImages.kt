@@ -6,6 +6,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Call
 import retrofit2.http.*
+import com.google.gson.JsonObject
 
 
 interface getResultImages {
@@ -16,7 +17,7 @@ interface getResultImages {
 //    @Multipart
     @POST("send")
     fun getResultImages(
-            @Body body: String
+            @Body body: JsonObject
 //            @Part("item") item: RequestBody,
 //            @Part("imageNumber") itemNumber: RequestBody,
 //            @Part targeImages: MultipartBody.Part
