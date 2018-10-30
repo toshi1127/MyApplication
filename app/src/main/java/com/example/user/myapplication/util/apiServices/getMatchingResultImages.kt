@@ -21,7 +21,7 @@ import retrofit2.Response
 
 class getMatchingResultImages {
     companion object {
-        private const val BASE_URL = "http://10.0.2.2"
+        private const val BASE_URL = "http://192.168.2.122"
 //        private const val BASE_URL = "http://192.168.11.3"
 // private const val BASE_URL = "http://192.168.11.3"
     }

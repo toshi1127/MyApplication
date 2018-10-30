@@ -30,9 +30,7 @@ import android.widget.*
 import android.support.v4.content.FileProvider
 import kotlinx.android.synthetic.main.activity_main.*
 import org.opencv.android.OpenCVLoader
-import org.opencv.android.Utils
 import org.opencv.core.*
-import org.opencv.features2d.DescriptorMatcher
 import org.nield.kotlinstatistics.median
 import android.util.Base64
 
@@ -172,10 +170,10 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
             val uri = getImageUri(applicationContext, convert(imageData!!))
             val intent = Intent(this, SecondActivity::class.java)
             intent.putExtra("number", 120)
+            intent.putExtra("imageDate", uri)
             intent.putExtra("string", "The message from MainActivity")
             println("imageURI :${uri}")
-            result_img.setImageBitmap(getImages(uri))
-//            startActivityForResult(intent, MY_REQUEST_CODE)
+            startActivityForResult(intent, MY_REQUEST_CODE)
             try {
 //                // src_img1の画像をMatに
 //                val scene1 = Mat(Img1!!.height, Img1!!.width, CvType.CV_8UC1).apply { Utils.bitmapToMat(Img1, this) }
@@ -331,10 +329,6 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
             var orientation: Int = (exifInterface.getAttribute(ExifInterface.TAG_ORIENTATION)).toInt()
             image_view.setImageURI(ImgUri)
             println(orientation)
-            // var wm: WindowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-            // val disp = wm.defaultDisplay
-            // var viewWidth = disp.getWidth()
-            // setMatrix(image_view, getImages(ImgUri!!), orientation, viewWidth)
         }
         if (requestCode == MY_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             println("推移しました")
@@ -511,10 +505,6 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         val (pts1After, pts2After) = normalMatch.filterMatches(matches_list)
         return@async Pair(pts1After, pts2After)
     }
-
-//    private fun getResultImage(targetImage: File): Deferred<Any> = async(CommonPool) {
-//        return@async getMatchingResultImages().getResultImages(targetImage).await()
-//    }
 
     private fun setMatrix(view: ImageView, bitmap: Bitmap, orientation: Int, width: Int){
 		view.setScaleType(ScaleType.MATRIX)
