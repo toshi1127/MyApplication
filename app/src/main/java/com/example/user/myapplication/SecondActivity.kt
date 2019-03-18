@@ -21,8 +21,8 @@ class SecondActivity : AppCompatActivity() {
         val button: Button = findViewById(R.id.button2)
         result_img.setImageBitmap(getImages(intent.extras.get("imageDate") as Uri))
         answer.text = "撮影画像は${0}番のACアダプターです"
-        count_txt.text = "マッチング数: ${intent.extras.get("inliers")}"
-        score.text = "Score: ${(intent.extras.get("inliers") as String).toFloat()/(intent.extras.get("matched") as String).toFloat()}"
+        count_txt.text = "マッチング数: ${intent.extras.get("number")}"
+        score.text = "Score: ${intent.extras.get("string")}"
 
         button.setOnClickListener {
 

@@ -17,13 +17,19 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="画像を選択"/>
+            android:text="画像1選択"/>
         <Button
             android:id="@+id/load_cameraImage"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="カメラの起動"/>
+        <Button
+            android:id="@+id/select_img2_btn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="画像2選択"/>
     </LinearLayout>
     <!--画像のラッパー-->
     <LinearLayout
@@ -62,5 +68,10 @@
             android:id="@+id/distanceValues"
             android:layout_width="wrap_content"
             android:layout_height="match_parent" />
+        <Button
+            android:id="@+id/button1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Open SecondActivity" />
     </LinearLayout>
 </LinearLayout>

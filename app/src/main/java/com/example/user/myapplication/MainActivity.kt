@@ -102,6 +102,9 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         distanceValueList.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         distanceSpinner!!.setAdapter(distanceValueList)
 
+        val median = sequenceOf(1.0, 3.0, 5.0).median()
+        println("median" + median) // prints "3.0"
+
         if(!OpenCVLoader.initDebug()) {
             Log.d("OpenCV", "error_openCV")
         }
@@ -115,12 +118,12 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         }
 
         // 画像選択ボタン2のリスナー
-//        select_img2_btn.setOnClickListener {
-//            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
-//            intent.addCategory(Intent.CATEGORY_OPENABLE)
-//            intent.setType("*/*")
-//            startActivityForResult(intent, RESULT_PICK_IMAGEFILE2)
-//        }
+        select_img2_btn.setOnClickListener {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+            intent.addCategory(Intent.CATEGORY_OPENABLE)
+            intent.setType("*/*")
+            startActivityForResult(intent, RESULT_PICK_IMAGEFILE2)
+        }
 
         load_cameraImage.setOnClickListener {
             // 保存先のフォルダーを作成
@@ -151,21 +154,25 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemSelectedListener {
         // 決定ボタンのリスナー
         decition_btn.setOnClickListener {
             var ResultImage : resultImages ?= null
+            println("画像処理を行います")
             runBlocking {
+                println("ImageToBase64:${encoder(cameraFilePath!!)}")
                 ResultImage = getMatchingResultImagesModel.getResultImages(encoder(cameraFilePath!!)).await()
+                println("画像処理結果: ${ResultImage}")
             }
             launch(CommonPool) {
                 val getUser = mainViewModel.fetchUser("toshi1127").await()
+                println("取得したユーザー2 :${getUser}")
             }
+            println("Done!")
+            println("画像処理結果2: ${ResultImage!!.image}")
             val imageData : String ?= ResultImage!!.image
-            val inliers: String ?= ResultImage!!.inliers
-            val matched: String ?= ResultImage!!.matched
             val uri = getImageUri(applicationContext, convert(imageData!!))
             val intent = Intent(this, SecondActivity::class.java)
-            intent.putExtra("inliers", inliers)
-            intent.putExtra("matched", matched)
+            intent.putExtra("number", 120)
             intent.putExtra("imageDate", uri)
             intent.putExtra("string", "The message from MainActivity")
+            println("imageURI :${uri}")
             startActivityForResult(intent, MY_REQUEST_CODE)
             try {
 //                // src_img1の画像をMatに

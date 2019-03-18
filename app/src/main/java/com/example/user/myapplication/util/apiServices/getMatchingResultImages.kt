@@ -51,11 +51,7 @@ class getMatchingResultImages {
             response?.let {
                 if (response.isSuccessful) {
                     val returnValue: resultImages = response.body()!!
-                    println("returnValue:${returnValue}")
-//                    println("returnValue:${returnValue.get("image")}")
-//                    println("returnValue:${returnValue.get("inliers")}")
-//                    println("returnValue:${returnValue.get("matched")}")
-                    return@async response.body()!!
+                    return@async returnValue
                 }
             }
             return@async resultImages()
